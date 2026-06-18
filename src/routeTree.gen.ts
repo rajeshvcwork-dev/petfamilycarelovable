@@ -9,38 +9,273 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VetsRouteImport } from './routes/vets'
+import { Route as SupportRouteImport } from './routes/support'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as RecordsRouteImport } from './routes/records'
+import { Route as PetsRouteImport } from './routes/pets'
+import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PetsPetIdRouteImport } from './routes/pets.$petId'
+import { Route as LegalTermsRouteImport } from './routes/legal.terms'
+import { Route as LegalPrivacyRouteImport } from './routes/legal.privacy'
+import { Route as LegalDataRouteImport } from './routes/legal.data'
 
+const VetsRoute = VetsRouteImport.update({
+  id: '/vets',
+  path: '/vets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecordsRoute = RecordsRouteImport.update({
+  id: '/records',
+  path: '/records',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PetsRoute = PetsRouteImport.update({
+  id: '/pets',
+  path: '/pets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PetsPetIdRoute = PetsPetIdRouteImport.update({
+  id: '/$petId',
+  path: '/$petId',
+  getParentRoute: () => PetsRoute,
+} as any)
+const LegalTermsRoute = LegalTermsRouteImport.update({
+  id: '/legal/terms',
+  path: '/legal/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalPrivacyRoute = LegalPrivacyRouteImport.update({
+  id: '/legal/privacy',
+  path: '/legal/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalDataRoute = LegalDataRouteImport.update({
+  id: '/legal/data',
+  path: '/legal/data',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/auth': typeof AuthRoute
+  '/dashboard': typeof DashboardRoute
+  '/notifications': typeof NotificationsRoute
+  '/pets': typeof PetsRouteWithChildren
+  '/records': typeof RecordsRoute
+  '/settings': typeof SettingsRoute
+  '/support': typeof SupportRoute
+  '/vets': typeof VetsRoute
+  '/legal/data': typeof LegalDataRoute
+  '/legal/privacy': typeof LegalPrivacyRoute
+  '/legal/terms': typeof LegalTermsRoute
+  '/pets/$petId': typeof PetsPetIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/auth': typeof AuthRoute
+  '/dashboard': typeof DashboardRoute
+  '/notifications': typeof NotificationsRoute
+  '/pets': typeof PetsRouteWithChildren
+  '/records': typeof RecordsRoute
+  '/settings': typeof SettingsRoute
+  '/support': typeof SupportRoute
+  '/vets': typeof VetsRoute
+  '/legal/data': typeof LegalDataRoute
+  '/legal/privacy': typeof LegalPrivacyRoute
+  '/legal/terms': typeof LegalTermsRoute
+  '/pets/$petId': typeof PetsPetIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
+  '/auth': typeof AuthRoute
+  '/dashboard': typeof DashboardRoute
+  '/notifications': typeof NotificationsRoute
+  '/pets': typeof PetsRouteWithChildren
+  '/records': typeof RecordsRoute
+  '/settings': typeof SettingsRoute
+  '/support': typeof SupportRoute
+  '/vets': typeof VetsRoute
+  '/legal/data': typeof LegalDataRoute
+  '/legal/privacy': typeof LegalPrivacyRoute
+  '/legal/terms': typeof LegalTermsRoute
+  '/pets/$petId': typeof PetsPetIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/dashboard'
+    | '/notifications'
+    | '/pets'
+    | '/records'
+    | '/settings'
+    | '/support'
+    | '/vets'
+    | '/legal/data'
+    | '/legal/privacy'
+    | '/legal/terms'
+    | '/pets/$petId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/dashboard'
+    | '/notifications'
+    | '/pets'
+    | '/records'
+    | '/settings'
+    | '/support'
+    | '/vets'
+    | '/legal/data'
+    | '/legal/privacy'
+    | '/legal/terms'
+    | '/pets/$petId'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/dashboard'
+    | '/notifications'
+    | '/pets'
+    | '/records'
+    | '/settings'
+    | '/support'
+    | '/vets'
+    | '/legal/data'
+    | '/legal/privacy'
+    | '/legal/terms'
+    | '/pets/$petId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
+  AuthRoute: typeof AuthRoute
+  DashboardRoute: typeof DashboardRoute
+  NotificationsRoute: typeof NotificationsRoute
+  PetsRoute: typeof PetsRouteWithChildren
+  RecordsRoute: typeof RecordsRoute
+  SettingsRoute: typeof SettingsRoute
+  SupportRoute: typeof SupportRoute
+  VetsRoute: typeof VetsRoute
+  LegalDataRoute: typeof LegalDataRoute
+  LegalPrivacyRoute: typeof LegalPrivacyRoute
+  LegalTermsRoute: typeof LegalTermsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/vets': {
+      id: '/vets'
+      path: '/vets'
+      fullPath: '/vets'
+      preLoaderRoute: typeof VetsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/records': {
+      id: '/records'
+      path: '/records'
+      fullPath: '/records'
+      preLoaderRoute: typeof RecordsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pets': {
+      id: '/pets'
+      path: '/pets'
+      fullPath: '/pets'
+      preLoaderRoute: typeof PetsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +283,62 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pets/$petId': {
+      id: '/pets/$petId'
+      path: '/$petId'
+      fullPath: '/pets/$petId'
+      preLoaderRoute: typeof PetsPetIdRouteImport
+      parentRoute: typeof PetsRoute
+    }
+    '/legal/terms': {
+      id: '/legal/terms'
+      path: '/legal/terms'
+      fullPath: '/legal/terms'
+      preLoaderRoute: typeof LegalTermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/privacy': {
+      id: '/legal/privacy'
+      path: '/legal/privacy'
+      fullPath: '/legal/privacy'
+      preLoaderRoute: typeof LegalPrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/data': {
+      id: '/legal/data'
+      path: '/legal/data'
+      fullPath: '/legal/data'
+      preLoaderRoute: typeof LegalDataRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface PetsRouteChildren {
+  PetsPetIdRoute: typeof PetsPetIdRoute
+}
+
+const PetsRouteChildren: PetsRouteChildren = {
+  PetsPetIdRoute: PetsPetIdRoute,
+}
+
+const PetsRouteWithChildren = PetsRoute._addFileChildren(PetsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
+  AuthRoute: AuthRoute,
+  DashboardRoute: DashboardRoute,
+  NotificationsRoute: NotificationsRoute,
+  PetsRoute: PetsRouteWithChildren,
+  RecordsRoute: RecordsRoute,
+  SettingsRoute: SettingsRoute,
+  SupportRoute: SupportRoute,
+  VetsRoute: VetsRoute,
+  LegalDataRoute: LegalDataRoute,
+  LegalPrivacyRoute: LegalPrivacyRoute,
+  LegalTermsRoute: LegalTermsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
