@@ -24,8 +24,11 @@ type Ctx = {
   // reviews
   addReview: (review: Omit<Review, "id" | "date">) => void;
   deleteReview: (id: string) => void;
+  // subscription
+  setPlan: (plan: "individual" | "family") => void;
   // theme
   toggleDark: () => void;
+
 };
 
 const AppCtx = createContext<Ctx | null>(null);
