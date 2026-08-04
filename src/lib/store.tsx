@@ -155,6 +155,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setState((s) => ({ ...s, reviews: s.reviews.filter((r) => r.id !== id) }));
   }, []);
 
+  const setPlan: Ctx["setPlan"] = useCallback((plan) => {
+    setState((s) => ({
+      ...s,
+      users: s.users.map((u) => (u.id === s.currentUserId ? { ...u, plan } : u)),
+    }));
+  }, []);
+
   const toggleDark = useCallback(() => setState((s) => ({ ...s, darkMode: !s.darkMode })), []);
 
   const value = useMemo<Ctx>(
@@ -165,10 +172,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addRecord, deleteRecord,
       markRead, clearNotifications,
       addReview, deleteReview,
+      setPlan,
       toggleDark,
     }),
-    [state, login, loginGoogle, register, logout, addPet, updatePet, deletePet, addRecord, deleteRecord, markRead, clearNotifications, addReview, deleteReview, toggleDark],
+    [state, login, loginGoogle, register, logout, addPet, updatePet, deletePet, addRecord, deleteRecord, markRead, clearNotifications, addReview, deleteReview, setPlan, toggleDark],
   );
+
 
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
 }
