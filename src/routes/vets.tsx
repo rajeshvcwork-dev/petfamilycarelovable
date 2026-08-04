@@ -1,58 +1,151 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell, SectionTitle } from "@/components/AppShell";
 import { useApp, useCurrentUser } from "@/lib/store";
-import { Building2, MapPin, Phone, Search, Star, Stethoscope, Trash2, X } from "lucide-react";
+import { Building2, ExternalLink, Globe, Loader2, MapPin, Phone, Search, Star, Stethoscope, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { Vet } from "@/lib/seed";
+import { useServerFn } from "@tanstack/react-start";
+import { searchProviders, type ProviderResult } from "@/lib/places.functions";
 
 export const Route = createFileRoute("/vets")({
-  head: () => ({ meta: [{ title: "Vet directory — PetCareBuddy" }] }),
+  head: () => ({
+    meta: [
+      { title: "Find a vet near you — PetCareBuddy" },
+      { name: "description", content: "Search live for veterinary hospitals, clinics and specialists near you and view results right inside PetCareBuddy." },
+      { property: "og:title", content: "Find a vet near you — PetCareBuddy" },
+      { property: "og:description", content: "Search live for veterinary hospitals, clinics and specialists near you." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: VetsPage,
 });
 
-const COUNTRIES = ["All", "India", "Pakistan", "Sri Lanka", "Thailand"] as const;
+const QUICK = ["Veterinary hospital", "Vet clinic", "Emergency vet", "Cat specialist vet"];
 
 function VetsPage() {
   const { state } = useApp();
   const navigate = useNavigate();
+  const user = useCurrentUser();
+  const runSearch = useServerFn(searchProviders);
+
   const [q, setQ] = useState("");
-  const [country, setCountry] = useState<typeof COUNTRIES[number]>("All");
+  const [near, setNear] = useState(user?.location ?? "");
   const [kind, setKind] = useState<string>("All");
   const [active, setActive] = useState<Vet | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
+  const [configured, setConfigured] = useState(true);
+  const [results, setResults] = useState<ProviderResult[]>([]);
 
   useEffect(() => { if (!state.currentUserId) navigate({ to: "/auth" }); }, [state.currentUserId, navigate]);
 
-  const list = useMemo(() => state.vets
-    .filter((v) => country === "All" || v.country === country)
-    .filter((v) => kind === "All" || v.kind === kind)
-    .filter((v) => {
-      const s = q.toLowerCase();
-      return !s || v.name.toLowerCase().includes(s) || (v.specialty || "").toLowerCase().includes(s) || v.city.toLowerCase().includes(s);
-    })
-    .sort((a, b) => b.rating - a.rating), [state.vets, country, kind, q]);
+  const saved = useMemo(
+    () => state.vets.filter((v) => kind === "All" || v.kind === kind).sort((a, b) => b.rating - a.rating),
+    [state.vets, kind],
+  );
+
+  async function submit(term?: string) {
+    const query = (term ?? q).trim();
+    if (query.length < 2) return toast.error("Type what you're looking for");
+    setQ(query);
+    setLoading(true);
+    try {
+      const res = await runSearch({ data: { query, near: near.trim() || undefined } });
+      setConfigured(res.configured);
+      setResults(res.results);
+      setSearched(true);
+      if (res.error) toast.error(res.error);
+      else if (res.configured && res.results.length === 0) toast.info("No providers found — try a different area");
+    } catch {
+      toast.error("Search failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <AppShell title="Find a vet">
-      <label className="flex items-center gap-2 h-11 rounded-2xl border border-border bg-card px-3 mb-3">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search hospitals, clinics, vets, specialists" className="flex-1 bg-transparent outline-none text-sm" />
-      </label>
+      <form
+        onSubmit={(e) => { e.preventDefault(); void submit(); }}
+        className="space-y-2 mb-3"
+      >
+        <label className="flex items-center gap-2 h-11 rounded-2xl border border-border bg-card px-3">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} maxLength={120} placeholder="Veterinary hospital, doctor, clinic…" className="flex-1 bg-transparent outline-none text-sm" />
+        </label>
+        <div className="flex gap-2">
+          <label className="flex-1 flex items-center gap-2 h-11 rounded-2xl border border-border bg-card px-3">
+            <MapPin className="h-4 w-4 text-muted-foreground" />
+            <input value={near} onChange={(e) => setNear(e.target.value)} maxLength={120} placeholder="Area or city" className="flex-1 bg-transparent outline-none text-sm" />
+          </label>
+          <button type="submit" disabled={loading} className="px-5 h-11 rounded-2xl gradient-teal text-white text-[13px] font-semibold inline-flex items-center gap-2 disabled:opacity-60">
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />} Search
+          </button>
+        </div>
+      </form>
 
       <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-2">
-        {COUNTRIES.map((c) => (
-          <Pill key={c} active={country === c} onClick={() => setCountry(c)}>{c}</Pill>
+        {QUICK.map((t) => (
+          <Pill key={t} active={q === t} onClick={() => void submit(t)}>{t}</Pill>
         ))}
       </div>
-      <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1">
+
+      {!configured && (
+        <div className="rounded-2xl border border-dashed border-border p-4 text-[12.5px] text-muted-foreground">
+          Live search isn’t connected yet. Add a Google search key in the admin setup to show real hospitals, doctors and clinics here.
+        </div>
+      )}
+
+      {searched && configured && (
+        <>
+          <SectionTitle icon={Globe}>{results.length} live result{results.length === 1 ? "" : "s"}</SectionTitle>
+          <div className="space-y-2">
+            {results.map((r) => (
+              <div key={r.id} className="rounded-2xl bg-card border border-border p-3">
+                <div className="flex items-start gap-3">
+                  <div className="h-11 w-11 rounded-2xl bg-primary/10 text-primary grid place-items-center"><Stethoscope className="h-5 w-5" /></div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 justify-between">
+                      <div className="font-semibold text-[14px] truncate">{r.name}</div>
+                      {r.rating != null && (
+                        <span className="pill bg-warning/15 text-warning-foreground shrink-0"><Star className="h-3 w-3 fill-current" />{r.rating}</span>
+                      )}
+                    </div>
+                    <div className="text-[11.5px] text-muted-foreground">
+                      {r.reviewsCount != null ? `${r.reviewsCount} Google reviews` : "Google listing"}
+                      {r.openNow != null ? (r.openNow ? " · Open now" : " · Closed") : ""}
+                    </div>
+                    <div className="text-[11.5px] text-muted-foreground flex items-start gap-1 mt-1"><MapPin className="h-3 w-3 mt-0.5 shrink-0" />{r.address}</div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {r.phone && (
+                        <a href={`tel:${r.phone.replace(/[^\d+]/g, "")}`} className="pill bg-primary/10 text-primary"><Phone className="h-3 w-3" />Call</a>
+                      )}
+                      <a target="_blank" rel="noreferrer" href={r.mapsUrl} className="pill bg-muted text-muted-foreground"><MapPin className="h-3 w-3" />Directions</a>
+                      {r.website && (
+                        <a target="_blank" rel="noreferrer" href={r.website} className="pill bg-muted text-muted-foreground"><ExternalLink className="h-3 w-3" />Website</a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {results.length === 0 && (
+              <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">No providers found for that search.</div>
+            )}
+          </div>
+        </>
+      )}
+
+      <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 mt-4">
         {["All", "Hospital", "Clinic", "Veterinarian", "Specialist"].map((k) => (
           <Pill key={k} active={kind === k} onClick={() => setKind(k)}>{k}</Pill>
         ))}
       </div>
-
-      <SectionTitle>{list.length} provider{list.length === 1 ? "" : "s"}</SectionTitle>
+      <SectionTitle>Your saved providers</SectionTitle>
       <div className="space-y-2">
-        {list.map((v) => (
+        {saved.map((v) => (
           <button key={v.id} onClick={() => setActive(v)} className="w-full text-left rounded-2xl bg-card border border-border p-3 active:scale-[0.99] transition">
             <div className="flex items-start gap-3">
               <div className="h-11 w-11 rounded-2xl bg-primary/10 text-primary grid place-items-center">
@@ -64,12 +157,12 @@ function VetsPage() {
                   <span className="pill bg-warning/15 text-warning-foreground"><Star className="h-3 w-3 fill-current" />{v.rating}</span>
                 </div>
                 <div className="text-[11.5px] text-muted-foreground">{v.kind}{v.specialty ? " · " + v.specialty : ""} · {v.experienceYears} yrs</div>
-                <div className="text-[11.5px] text-muted-foreground flex items-center gap-1 mt-1"><MapPin className="h-3 w-3" />{v.address}, {v.country}</div>
+                <div className="text-[11.5px] text-muted-foreground flex items-center gap-1 mt-1"><MapPin className="h-3 w-3" />{v.address}</div>
               </div>
             </div>
           </button>
         ))}
-        {list.length === 0 && <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">No providers match your filters.</div>}
+        {saved.length === 0 && <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">No saved providers yet.</div>}
       </div>
 
       {active && <VetSheet vet={active} onClose={() => setActive(null)} />}
@@ -79,7 +172,7 @@ function VetsPage() {
 
 function Pill({ children, active, onClick }: { children: React.ReactNode; active?: boolean; onClick: () => void }) {
   return (
-    <button onClick={onClick} className={`shrink-0 px-3 h-8 rounded-full text-[12px] font-semibold border transition-colors ${active ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:text-foreground"}`}>
+    <button type="button" onClick={onClick} className={`shrink-0 px-3 h-8 rounded-full text-[12px] font-semibold border transition-colors ${active ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:text-foreground"}`}>
       {children}
     </button>
   );
@@ -119,7 +212,7 @@ function VetSheet({ vet, onClose }: { vet: Vet; onClose: () => void }) {
 
         <div className="mt-3 rounded-2xl border border-border bg-muted/40 p-3">
           <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Address</div>
-          <div className="text-[13px]">{vet.address}, {vet.city}, {vet.country}</div>
+          <div className="text-[13px]">{vet.address}, {vet.city}</div>
           <div className="text-[12px] text-muted-foreground mt-1">{vet.phone}</div>
         </div>
 
@@ -134,7 +227,7 @@ function VetSheet({ vet, onClose }: { vet: Vet; onClose: () => void }) {
                   </button>
                 ))}
               </div>
-              <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Share your experience" className="w-full rounded-xl border border-border bg-background p-2 text-sm outline-none focus:ring-2 focus:ring-primary/40 min-h-[60px]" />
+              <textarea value={text} onChange={(e) => setText(e.target.value)} maxLength={1000} placeholder="Share your experience" className="w-full rounded-xl border border-border bg-background p-2 text-sm outline-none focus:ring-2 focus:ring-primary/40 min-h-[60px]" />
               <button
                 onClick={() => {
                   if (!text.trim()) return toast.error("Add a comment");

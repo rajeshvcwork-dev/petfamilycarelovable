@@ -1,19 +1,96 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell, SectionTitle } from "@/components/AppShell";
 import { useApp, useCurrentUser } from "@/lib/store";
-import { ChevronRight, CreditCard, FileText, LogOut, Moon, Shield, ShieldCheck, Sun, User } from "lucide-react";
-import { useEffect } from "react";
+import { ChevronRight, CreditCard, FileText, Loader2, LogOut, Moon, Shield, ShieldCheck, Sparkles, Sun, User } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import {
+  confirmSubscriptionPayment,
+  createSubscriptionOrder,
+  failSubscriptionAttempt,
+  getCheckoutConfig,
+} from "@/lib/billing.functions";
+import { loadRazorpay, openRazorpayCheckout } from "@/lib/razorpay";
 
 export const Route = createFileRoute("/settings")({
-  head: () => ({ meta: [{ title: "Settings — PetCareBuddy" }] }),
+  head: () => ({
+    meta: [
+      { title: "Settings & subscription — PetCareBuddy" },
+      { name: "description", content: "Manage your PetCareBuddy profile, theme and pet care subscription plan." },
+      { property: "og:title", content: "Settings & subscription — PetCareBuddy" },
+      { property: "og:description", content: "Manage your profile, theme and pet care subscription plan." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: Settings,
 });
 
 function Settings() {
   const user = useCurrentUser();
-  const { state, toggleDark, logout } = useApp();
+  const { state, toggleDark, logout, setPlan } = useApp();
   const navigate = useNavigate();
   useEffect(() => { if (!state.currentUserId) navigate({ to: "/auth" }); }, [state.currentUserId, navigate]);
+
+  const fetchConfig = useServerFn(getCheckoutConfig);
+  const createOrder = useServerFn(createSubscriptionOrder);
+  const confirmPayment = useServerFn(confirmSubscriptionPayment);
+  const failAttempt = useServerFn(failSubscriptionAttempt);
+  const [busy, setBusy] = useState(false);
+
+  const { data: config } = useQuery({ queryKey: ["checkout-config"], queryFn: () => fetchConfig() });
+  const familyPlan = config?.plans.find((p) => p.code === "family");
+  const isFamily = user?.plan === "family";
+
+  async function upgrade() {
+    if (!user) return;
+    if (!config?.configured) return toast.error("Payments aren’t connected yet. Add your Razorpay keys first.");
+    setBusy(true);
+    try {
+      const ok = await loadRazorpay();
+      if (!ok) throw new Error("checkout script");
+      const order = await createOrder({
+        data: { planCode: "family", fullName: user.fullName, email: user.email, mobile: user.mobile },
+      });
+      openRazorpayCheckout({
+        keyId: order.keyId,
+        orderId: order.orderId,
+        amount: order.amount,
+        currency: order.currency,
+        planName: order.planName,
+        name: user.fullName,
+        email: user.email,
+        mobile: user.mobile,
+        onSuccess: async (res) => {
+          try {
+            await confirmPayment({
+              data: {
+                attemptId: order.attemptId,
+                razorpayOrderId: res.razorpay_order_id,
+                razorpayPaymentId: res.razorpay_payment_id,
+                razorpaySignature: res.razorpay_signature,
+              },
+            });
+            setPlan("family");
+            toast.success("Family Plan activated — up to 4 pet profiles");
+          } catch {
+            toast.error("We couldn’t verify that payment. Support has been notified.");
+          }
+        },
+        onDismiss: () => {
+          void failAttempt({ data: { attemptId: order.attemptId, reason: "Checkout closed before payment" } });
+          toast.info("Checkout cancelled");
+        },
+      });
+    } catch {
+      toast.error("Could not start checkout. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (!user) return null;
 
   return (
@@ -33,16 +110,42 @@ function Settings() {
       <div className="rounded-2xl bg-card border border-border p-4">
         <div className="flex items-center justify-between">
           <div>
-            <div className="font-bold text-sm">{user.plan === "family" ? "Family Plan" : "Individual Plan"}</div>
-            <div className="text-[12px] text-muted-foreground">{user.plan === "family" ? "Up to 4 pets" : "1 pet"} · Active</div>
+            <div className="font-bold text-sm">{isFamily ? "Family Plan" : "Single Pet Plan"}</div>
+            <div className="text-[12px] text-muted-foreground">{isFamily ? "Up to 4 pet profiles" : "1 pet profile"} · Active</div>
           </div>
           <span className="pill bg-success/15 text-success"><ShieldCheck className="h-3 w-3" />Active</span>
         </div>
         <div className="text-[11.5px] text-muted-foreground mt-2">Renews on {new Date(Date.now() + 86400000 * 60).toLocaleDateString()}</div>
-        <div className="grid grid-cols-2 gap-2 mt-3">
-          <button className="h-10 rounded-2xl bg-card border border-border text-[13px] font-semibold">Manage</button>
-          <button className="h-10 rounded-2xl gradient-teal text-white text-[13px] font-semibold">Upgrade</button>
-        </div>
+
+        {isFamily ? (
+          <div className="mt-3 rounded-xl bg-muted/50 p-3 text-[12px] text-muted-foreground">
+            You’re on the highest plan — nothing more to upgrade.
+          </div>
+        ) : (
+          <>
+            <div className="mt-3 rounded-xl bg-primary/5 border border-primary/20 p-3">
+              <div className="text-[12.5px] font-semibold flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-primary" />Family Plan</div>
+              <div className="text-[11.5px] text-muted-foreground mt-0.5">
+                Maintain up to 4 pet profiles
+                {familyPlan ? ` · ₹${(familyPlan.amountPaise / 100).toLocaleString()} / ${familyPlan.periodDays} days` : ""}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 mt-3">
+              <button type="button" className="h-10 rounded-2xl bg-card border border-border text-[13px] font-semibold">Manage</button>
+              <button
+                type="button"
+                onClick={() => void upgrade()}
+                disabled={busy}
+                className="h-10 rounded-2xl gradient-teal text-white text-[13px] font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                {busy && <Loader2 className="h-4 w-4 animate-spin" />} Upgrade
+              </button>
+            </div>
+            {config && !config.configured && (
+              <div className="text-[11px] text-muted-foreground mt-2">Payments will go live once the Razorpay keys are saved.</div>
+            )}
+          </>
+        )}
       </div>
 
       <SectionTitle>Account</SectionTitle>
