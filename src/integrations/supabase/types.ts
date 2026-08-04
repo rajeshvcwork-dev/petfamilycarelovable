@@ -14,7 +14,135 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      payment_attempts: {
+        Row: {
+          amount_paise: number
+          created_at: string
+          currency: string
+          email: string
+          failure_reason: string | null
+          full_name: string
+          id: string
+          mobile: string
+          plan_code: string
+          razorpay_order_id: string | null
+          razorpay_payment_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_paise?: number
+          created_at?: string
+          currency?: string
+          email?: string
+          failure_reason?: string | null
+          full_name?: string
+          id?: string
+          mobile?: string
+          plan_code?: string
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_paise?: number
+          created_at?: string
+          currency?: string
+          email?: string
+          failure_reason?: string | null
+          full_name?: string
+          id?: string
+          mobile?: string
+          plan_code?: string
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          full_name: string
+          id: string
+          mobile: string
+          plan_code: string
+          started_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at?: string
+          full_name?: string
+          id?: string
+          mobile?: string
+          plan_code?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          full_name?: string
+          id?: string
+          mobile?: string
+          plan_code?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      subscription_plans: {
+        Row: {
+          amount_paise: number
+          code: string
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          period_days: number
+          pet_limit: number
+          updated_at: string
+        }
+        Insert: {
+          amount_paise?: number
+          code: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          period_days?: number
+          pet_limit?: number
+          updated_at?: string
+        }
+        Update: {
+          amount_paise?: number
+          code?: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          period_days?: number
+          pet_limit?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
