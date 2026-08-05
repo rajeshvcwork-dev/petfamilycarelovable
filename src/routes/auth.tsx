@@ -30,8 +30,7 @@ function AuthPage() {
       const ok = login(email, password);
       if (!ok) return toast.error("Invalid credentials. Try demouser / demouser");
       toast.success("Welcome back");
-      const isAdmin = email.trim().toLowerCase() === "admin";
-      navigate({ to: isAdmin ? "/admin" : "/dashboard" });
+      navigate({ to: "/dashboard" });
     } else if (mode === "register") {
       if (!fullName || !email || !mobile || !password) return toast.error("Fill all fields");
       register({ fullName, email, mobile, password });
