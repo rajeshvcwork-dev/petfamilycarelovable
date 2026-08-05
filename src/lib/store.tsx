@@ -26,6 +26,8 @@ type Ctx = {
   deleteReview: (id: string) => void;
   // subscription
   setPlan: (plan: "individual" | "family") => void;
+  updateProfile: (patch: { fullName?: string; email?: string; mobile?: string; location?: string }) => void;
+
   // theme
   toggleDark: () => void;
 
