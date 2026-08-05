@@ -99,11 +99,14 @@ function Settings() {
         <div className="h-12 w-12 rounded-2xl gradient-teal text-white grid place-items-center text-lg font-bold">
           {user.fullName.split(" ").map((s) => s[0]).slice(0, 2).join("")}
         </div>
-        <div className="flex-1">
-          <div className="font-bold">{user.fullName}</div>
-          <div className="text-[12px] text-muted-foreground">{user.email}</div>
+        <div className="flex-1 min-w-0">
+          <div className="font-bold truncate">{user.fullName}</div>
+          <div className="text-[12px] text-muted-foreground truncate">{user.email}</div>
           <div className="text-[11.5px] text-muted-foreground">{user.mobile}</div>
         </div>
+        <button onClick={() => setEditing(true)} className="h-9 px-3 rounded-full border border-border text-[12px] font-semibold inline-flex items-center gap-1.5 shrink-0">
+          <Pencil className="h-3.5 w-3.5" /> Edit
+        </button>
       </div>
 
       <SectionTitle icon={CreditCard}>Subscription</SectionTitle>
@@ -150,17 +153,29 @@ function Settings() {
 
       <SectionTitle>Account</SectionTitle>
       <div className="rounded-2xl bg-card border border-border divide-y divide-border overflow-hidden">
-        <Row icon={User} label="Profile" hint="Edit name, mobile, email" onClick={() => {}} />
+        <Row icon={User} label="Profile" hint="Edit name, mobile, email" onClick={() => setEditing(true)} />
         <Row icon={state.darkMode ? Sun : Moon} label={state.darkMode ? "Light mode" : "Dark mode"} hint="Switch app theme" onClick={toggleDark} />
-        <Row icon={Shield} label="Security" hint="Encryption · Sign-in protection" onClick={() => {}} />
+        <Row icon={Shield} label="Security" hint="Encryption · Sign-in protection" onClick={() => toast.info("Your records are encrypted in transit and at rest.")} />
       </div>
 
-      <SectionTitle>Legal</SectionTitle>
+      <SectionTitle>Legal & policies</SectionTitle>
       <div className="rounded-2xl bg-card border border-border divide-y divide-border overflow-hidden">
         <RowLink to="/legal/privacy" icon={Shield} label="Privacy Policy" />
-        <RowLink to="/legal/data" icon={FileText} label="Data & Storage Policy" />
+        <RowLink to="/legal/data" icon={Shield} label="Data Privacy & Storage Policy" />
+        <RowLink to="/legal/subscription" icon={CreditCard} label="Subscription Policy" />
+        <RowLink to="/legal/refund" icon={FileText} label="Refund Policy" />
+        <RowLink to="/legal/cancellation" icon={FileText} label="Cancellation Policy" />
         <RowLink to="/legal/terms" icon={FileText} label="Terms & Conditions" />
       </div>
+
+      {editing && (
+        <ProfileSheet
+          user={{ fullName: user.fullName, email: user.email, mobile: user.mobile, location: user.location ?? "" }}
+          onClose={() => setEditing(false)}
+          onSave={(data) => { updateProfile(data); setEditing(false); toast.success("Profile updated"); }}
+        />
+      )}
+
 
       <button onClick={() => { logout(); navigate({ to: "/auth" }); }} className="mt-4 w-full h-11 rounded-2xl bg-destructive/10 text-destructive font-semibold inline-flex items-center justify-center gap-2">
         <LogOut className="h-4 w-4" /> Sign out
