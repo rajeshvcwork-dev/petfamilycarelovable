@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell, SectionTitle } from "@/components/AppShell";
 import { useApp, useCurrentUser } from "@/lib/store";
-import { ChevronRight, CreditCard, FileText, Loader2, LogOut, Moon, Shield, ShieldCheck, Sparkles, Sun, User } from "lucide-react";
+import { ChevronRight, CreditCard, FileText, Loader2, LogOut, Moon, Pencil, Shield, ShieldCheck, Sparkles, Sun, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
