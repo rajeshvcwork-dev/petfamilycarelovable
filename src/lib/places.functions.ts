@@ -4,13 +4,12 @@ import { z } from "zod";
 export type ProviderResult = {
   id: string;
   name: string;
+  category: string;
   address: string;
-  rating: number | null;
-  reviewsCount: number | null;
-  phone: string | null;
-  openNow: boolean | null;
   mapsUrl: string;
-  website: string | null;
+  searchUrl: string;
+  lat: number;
+  lng: number;
 };
 
 const schema = z.object({
@@ -18,63 +17,56 @@ const schema = z.object({
   near: z.string().trim().max(120).optional(),
 });
 
-/** Live provider search powered by Google Places (Text Search). */
+/**
+ * Free provider search — uses OpenStreetMap's Nominatim service (no API key,
+ * no billing) and links out to Google search / Google Maps for each result.
+ */
 export const searchProviders = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => schema.parse(data))
-  .handler(async ({ data }): Promise<{ configured: boolean; results: ProviderResult[]; error?: string }> => {
-    const key = process.env["GOOGLE_MAPS_API_KEY"];
-    if (!key) return { configured: false, results: [] };
-
-    const textQuery = data.near ? `${data.query} near ${data.near}` : data.query;
+  .handler(async ({ data }): Promise<{ results: ProviderResult[]; error?: string }> => {
+    const term = data.near ? `${data.query} ${data.near}` : data.query;
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(term)}&format=jsonv2&limit=20&addressdetails=1`;
 
     try {
-      const res = await fetch("https://places.googleapis.com/v1/places:searchText", {
-        method: "POST",
+      const res = await fetch(url, {
         headers: {
-          "Content-Type": "application/json",
-          "X-Goog-Api-Key": key,
-          "X-Goog-FieldMask":
-            "places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.nationalPhoneNumber,places.currentOpeningHours.openNow,places.googleMapsUri,places.websiteUri",
+          "User-Agent": "PetCareFamily/1.0 (pet healthcare app provider search)",
+          Accept: "application/json",
         },
-        body: JSON.stringify({ textQuery, maxResultCount: 20 }),
       });
-
       if (!res.ok) {
-        console.error("[places] search failed", res.status, await res.text());
-        return { configured: true, results: [], error: "Search is temporarily unavailable." };
+        console.error("[search] nominatim failed", res.status);
+        return { results: [], error: "Search is temporarily unavailable. Please try again." };
       }
 
-      const json = (await res.json()) as {
-        places?: Array<{
-          id: string;
-          displayName?: { text?: string };
-          formattedAddress?: string;
-          rating?: number;
-          userRatingCount?: number;
-          nationalPhoneNumber?: string;
-          currentOpeningHours?: { openNow?: boolean };
-          googleMapsUri?: string;
-          websiteUri?: string;
-        }>;
-      };
+      const json = (await res.json()) as Array<{
+        place_id: number;
+        display_name: string;
+        name?: string;
+        type?: string;
+        category?: string;
+        lat: string;
+        lon: string;
+      }>;
 
-      const results: ProviderResult[] = (json.places ?? []).map((p) => ({
-        id: p.id,
-        name: p.displayName?.text ?? "Unnamed provider",
-        address: p.formattedAddress ?? "",
-        rating: p.rating ?? null,
-        reviewsCount: p.userRatingCount ?? null,
-        phone: p.nationalPhoneNumber ?? null,
-        openNow: p.currentOpeningHours?.openNow ?? null,
-        mapsUrl:
-          p.googleMapsUri ??
-          `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.displayName?.text ?? textQuery)}`,
-        website: p.websiteUri ?? null,
-      }));
+      const results: ProviderResult[] = json.map((p) => {
+        const name = p.name && p.name.trim() ? p.name : p.display_name.split(",")[0]!;
+        const label = `${name} ${p.display_name.split(",").slice(1, 3).join(",").trim()}`;
+        return {
+          id: String(p.place_id),
+          name,
+          category: (p.type ?? p.category ?? "place").replace(/_/g, " "),
+          address: p.display_name,
+          lat: Number(p.lat),
+          lng: Number(p.lon),
+          mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(label)}`,
+          searchUrl: `https://www.google.com/search?q=${encodeURIComponent(label)}`,
+        };
+      });
 
-      return { configured: true, results };
+      return { results };
     } catch (err) {
-      console.error("[places] search error", err);
-      return { configured: true, results: [], error: "Search is temporarily unavailable." };
+      console.error("[search] error", err);
+      return { results: [], error: "Search is temporarily unavailable. Please try again." };
     }
   });
