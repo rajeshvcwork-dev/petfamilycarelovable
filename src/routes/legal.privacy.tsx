@@ -2,13 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/legal/privacy")({
-  head: () => ({ meta: [{ title: "Privacy Policy — PetCareBuddy" }] }),
+  head: () => ({ meta: [{ title: "Privacy Policy — PetCare Family" }] }),
   component: PrivacyPage,
 });
 
 function PrivacyPage() {
   return <LegalShell title="Privacy Policy">
-    <P>PetCareBuddy is committed to protecting the privacy of pet parents and their pets. This policy describes the information we collect, how we use it, and the rights you have as a user.</P>
+    <P>PetCare Family is committed to protecting the privacy of pet parents and their pets. This policy describes the information we collect, how we use it, and the rights you have as a user.</P>
     <H>1. Data we collect</H>
     <P>Account information you provide (name, email, mobile), pet profiles you create, medical records you upload, reviews you write, and limited device and usage telemetry needed to operate the app.</P>
     <H>2. How we use your data</H>
@@ -18,7 +18,7 @@ function PrivacyPage() {
     <H>4. Your rights</H>
     <P>You may access, correct, export, or delete your data at any time from Settings. Account deletion permanently removes your pets, records, and reviews.</P>
     <H>5. Children & pets</H>
-    <P>PetCareBuddy is intended for adult pet parents. We do not knowingly collect data from minors.</P>
+    <P>PetCare Family is intended for adult pet parents. We do not knowingly collect data from minors.</P>
     <H>6. Contact</H>
     <P>Questions? Reach our team from the Support tab.</P>
   </LegalShell>;

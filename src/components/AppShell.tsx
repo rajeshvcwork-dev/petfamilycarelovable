@@ -31,7 +31,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
                 <PawPrint className="h-5 w-5" />
               </div>
               <div className="leading-tight">
-                <div className="text-[15px] font-bold tracking-tight">PetCareBuddy</div>
+                <div className="text-[15px] font-bold tracking-tight">PetCare Family</div>
                 {title ? (
                   <div className="text-[11px] text-muted-foreground">{title}</div>
                 ) : user ? (

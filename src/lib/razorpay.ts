@@ -39,7 +39,7 @@ export function openRazorpayCheckout(options: {
     order_id: options.orderId,
     amount: options.amount,
     currency: options.currency,
-    name: "PetCareBuddy",
+    name: "PetCare Family",
     description: options.planName,
     prefill: { name: options.name, email: options.email, contact: options.mobile },
     theme: { color: "#0d9488" },

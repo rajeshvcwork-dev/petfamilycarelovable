@@ -6,7 +6,7 @@ import { ArrowRight, Calendar, FileText, HeartPulse, MapPin, PawPrint, Plus, Shi
 import { useEffect } from "react";
 
 export const Route = createFileRoute("/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — PetCareBuddy" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — PetCare Family" }] }),
   component: Dashboard,
 });
 

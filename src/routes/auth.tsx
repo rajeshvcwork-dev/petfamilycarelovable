@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { PawPrint, Mail, Lock, User, Phone, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "Sign in — PetCareBuddy" }] }),
+  head: () => ({ meta: [{ title: "Sign in — PetCare Family" }] }),
   component: AuthPage,
 });
 
@@ -35,7 +35,7 @@ function AuthPage() {
     } else if (mode === "register") {
       if (!fullName || !email || !mobile || !password) return toast.error("Fill all fields");
       register({ fullName, email, mobile, password });
-      toast.success("Account created — welcome to PetCareBuddy");
+      toast.success("Account created — welcome to PetCare Family");
       navigate({ to: "/dashboard" });
     } else {
       toast.success("Reset link sent (demo) — check your email");
@@ -50,7 +50,7 @@ function AuthPage() {
           <div className="mx-auto h-14 w-14 rounded-3xl gradient-teal grid place-items-center text-white shadow-pop">
             <PawPrint className="h-7 w-7" />
           </div>
-          <h1 className="mt-4 text-2xl font-extrabold tracking-tight">PetCareBuddy</h1>
+          <h1 className="mt-4 text-2xl font-extrabold tracking-tight">PetCare Family</h1>
           <p className="text-[13px] text-muted-foreground">Your Intelligent Pet Healthcare Companion</p>
         </div>
 

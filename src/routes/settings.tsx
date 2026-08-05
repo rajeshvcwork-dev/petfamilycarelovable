@@ -17,9 +17,9 @@ import { loadRazorpay, openRazorpayCheckout } from "@/lib/razorpay";
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "Settings & subscription — PetCareBuddy" },
-      { name: "description", content: "Manage your PetCareBuddy profile, theme and pet care subscription plan." },
-      { property: "og:title", content: "Settings & subscription — PetCareBuddy" },
+      { title: "Settings & subscription — PetCare Family" },
+      { name: "description", content: "Manage your PetCare Family profile, theme and pet care subscription plan." },
+      { property: "og:title", content: "Settings & subscription — PetCare Family" },
       { property: "og:description", content: "Manage your profile, theme and pet care subscription plan." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -166,7 +166,7 @@ function Settings() {
         <LogOut className="h-4 w-4" /> Sign out
       </button>
 
-      <p className="text-center text-[11px] text-muted-foreground mt-4">PetCareBuddy v1.0 · Made with care</p>
+      <p className="text-center text-[11px] text-muted-foreground mt-4">PetCare Family v1.0 · Made with care</p>
     </AppShell>
   );
 }

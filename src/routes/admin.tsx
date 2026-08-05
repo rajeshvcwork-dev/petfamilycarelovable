@@ -15,9 +15,9 @@ import {
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Admin portal — PetCareBuddy" },
-      { name: "description", content: "Manage PetCareBuddy subscription plans, active customers and failed payment attempts." },
-      { property: "og:title", content: "Admin portal — PetCareBuddy" },
+      { title: "Admin portal — PetCare Family" },
+      { name: "description", content: "Manage PetCare Family subscription plans, active customers and failed payment attempts." },
+      { property: "og:title", content: "Admin portal — PetCare Family" },
       { property: "og:description", content: "Manage subscription plans, customers and payment attempts." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -233,7 +233,7 @@ function Admin() {
         </div>
       </section>
 
-      <p className="text-center text-[11px] text-muted-foreground mt-8">PetCareBuddy admin</p>
+      <p className="text-center text-[11px] text-muted-foreground mt-8">PetCare Family admin</p>
     </div>
   );
 }

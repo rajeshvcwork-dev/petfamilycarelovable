@@ -11,9 +11,9 @@ import { searchProviders, type ProviderResult } from "@/lib/places.functions";
 export const Route = createFileRoute("/vets")({
   head: () => ({
     meta: [
-      { title: "Find a vet near you — PetCareBuddy" },
-      { name: "description", content: "Search live for veterinary hospitals, clinics and specialists near you and view results right inside PetCareBuddy." },
-      { property: "og:title", content: "Find a vet near you — PetCareBuddy" },
+      { title: "Find a vet near you — PetCare Family" },
+      { name: "description", content: "Search live for veterinary hospitals, clinics and specialists near you and view results right inside PetCare Family." },
+      { property: "og:title", content: "Find a vet near you — PetCare Family" },
       { property: "og:description", content: "Search live for veterinary hospitals, clinics and specialists near you." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

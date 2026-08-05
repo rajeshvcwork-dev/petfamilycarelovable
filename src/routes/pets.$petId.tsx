@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { PetForm } from "./pets";
 
 export const Route = createFileRoute("/pets/$petId")({
-  head: () => ({ meta: [{ title: "Pet profile — PetCareBuddy" }] }),
+  head: () => ({ meta: [{ title: "Pet profile — PetCare Family" }] }),
   component: PetDetail,
 });
 

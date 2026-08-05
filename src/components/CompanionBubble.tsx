@@ -38,7 +38,7 @@ export function CompanionBubble() {
                   <Sparkles className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="text-sm font-bold">PetCareBuddy Companion</div>
+                  <div className="text-sm font-bold">PetCare Family Companion</div>
                   <div className="text-[11px] text-muted-foreground">AI-powered preventive insights</div>
                 </div>
               </div>
@@ -86,7 +86,7 @@ export function CompanionBubble() {
               <AlertTriangle className="h-4 w-4 mt-0.5" />
               <div>
                 <div className="font-semibold">Medical Disclaimer</div>
-                PetCareBuddy provides educational information and preventive recommendations. It does not replace a licensed veterinarian.
+                PetCare Family provides educational information and preventive recommendations. It does not replace a licensed veterinarian.
               </div>
             </div>
           </div>
