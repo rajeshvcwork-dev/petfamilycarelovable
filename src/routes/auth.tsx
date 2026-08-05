@@ -111,9 +111,9 @@ function AuthPage() {
               <Sparkles className="h-3.5 w-3.5" /> Demo account
             </div>
             <div className="mt-1 text-muted-foreground">
-              Username <span className="font-mono font-semibold text-foreground">demouser</span> · Password <span className="font-mono font-semibold text-foreground">demouser</span><br />
-              Admin: <span className="font-mono font-semibold text-foreground">admin</span> / <span className="font-mono font-semibold text-foreground">admin</span>
+              Username <span className="font-mono font-semibold text-foreground">demouser</span> · Password <span className="font-mono font-semibold text-foreground">demouser</span>
             </div>
+
           </div>
         </div>
 
