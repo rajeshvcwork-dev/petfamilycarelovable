@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Pet Family Care</string>
+    <string name="title_activity_main">Pet Family Care</string>
+    <string name="package_name">com.lmnharvest.petfamilycare</string>
+    <string name="custom_url_scheme">com.lmnharvest.petfamilycare</string>
+</resources>
