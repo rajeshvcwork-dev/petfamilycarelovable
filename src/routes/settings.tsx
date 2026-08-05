@@ -30,7 +30,7 @@ export const Route = createFileRoute("/settings")({
 
 function Settings() {
   const user = useCurrentUser();
-  const { state, toggleDark, logout, setPlan } = useApp();
+  const { state, toggleDark, logout, setPlan, updateProfile } = useApp();
   const navigate = useNavigate();
   useEffect(() => { if (!state.currentUserId) navigate({ to: "/auth" }); }, [state.currentUserId, navigate]);
 
