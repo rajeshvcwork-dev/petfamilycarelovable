@@ -188,6 +188,54 @@ function Settings() {
   );
 }
 
+type ProfileData = { fullName: string; email: string; mobile: string; location: string };
+
+function ProfileSheet({ user, onClose, onSave }: { user: ProfileData; onClose: () => void; onSave: (data: ProfileData) => void }) {
+  const [form, setForm] = useState<ProfileData>(user);
+  const set = (k: keyof ProfileData) => (e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  return (
+    <div className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (form.fullName.trim().length < 2) return toast.error("Enter your name");
+          if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) return toast.error("Enter a valid email");
+          if (form.mobile.replace(/\D/g, "").length < 8) return toast.error("Enter a valid mobile number");
+          onSave({
+            fullName: form.fullName.trim(),
+            email: form.email.trim(),
+            mobile: form.mobile.trim(),
+            location: form.location.trim(),
+          });
+        }}
+        className="w-full sm:max-w-md bg-card rounded-t-3xl sm:rounded-3xl border border-border p-5 space-y-3 animate-in slide-in-from-bottom"
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="font-extrabold text-base">Edit profile</h2>
+          <button type="button" onClick={onClose} className="h-9 w-9 grid place-items-center rounded-full hover:bg-muted"><X className="h-4 w-4" /></button>
+        </div>
+        <Field label="Full name"><input value={form.fullName} onChange={set("fullName")} maxLength={60} className="input-line" /></Field>
+        <Field label="Email"><input type="email" value={form.email} onChange={set("email")} maxLength={120} className="input-line" /></Field>
+        <Field label="Mobile"><input value={form.mobile} onChange={set("mobile")} maxLength={20} className="input-line" /></Field>
+        <Field label="City / area"><input value={form.location} onChange={set("location")} maxLength={80} placeholder="Used to pre-fill vet search" className="input-line" /></Field>
+        <button type="submit" className="w-full h-11 rounded-2xl gradient-teal text-white font-semibold text-sm">Save changes</button>
+      </form>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="text-[11.5px] font-semibold text-muted-foreground">{label}</span>
+      <div className="mt-1 h-11 rounded-2xl border border-border bg-background px-3 flex items-center">{children}</div>
+    </label>
+  );
+}
+
+
+
 function Row({ icon: Icon, label, hint, onClick }: { icon: React.ComponentType<{ className?: string }>; label: string; hint?: string; onClick: () => void }) {
   return (
     <button onClick={onClick} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/50">
