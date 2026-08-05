@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell, SectionTitle } from "@/components/AppShell";
 import { useApp, useCurrentUser } from "@/lib/store";
-import { ChevronRight, CreditCard, FileText, Loader2, LogOut, Moon, Shield, ShieldCheck, Sparkles, Sun, User } from "lucide-react";
+import { ChevronRight, CreditCard, FileText, Loader2, LogOut, Moon, Pencil, Shield, ShieldCheck, Sparkles, Sun, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
@@ -17,9 +17,9 @@ import { loadRazorpay, openRazorpayCheckout } from "@/lib/razorpay";
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "Settings & subscription — PetCareBuddy" },
-      { name: "description", content: "Manage your PetCareBuddy profile, theme and pet care subscription plan." },
-      { property: "og:title", content: "Settings & subscription — PetCareBuddy" },
+      { title: "Settings & subscription — PetCare Family" },
+      { name: "description", content: "Manage your PetCare Family profile, theme and pet care subscription plan." },
+      { property: "og:title", content: "Settings & subscription — PetCare Family" },
       { property: "og:description", content: "Manage your profile, theme and pet care subscription plan." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/settings")({
 
 function Settings() {
   const user = useCurrentUser();
-  const { state, toggleDark, logout, setPlan } = useApp();
+  const { state, toggleDark, logout, setPlan, updateProfile } = useApp();
   const navigate = useNavigate();
   useEffect(() => { if (!state.currentUserId) navigate({ to: "/auth" }); }, [state.currentUserId, navigate]);
 
@@ -39,6 +39,8 @@ function Settings() {
   const confirmPayment = useServerFn(confirmSubscriptionPayment);
   const failAttempt = useServerFn(failSubscriptionAttempt);
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(false);
+
 
   const { data: config } = useQuery({ queryKey: ["checkout-config"], queryFn: () => fetchConfig() });
   const familyPlan = config?.plans.find((p) => p.code === "family");
@@ -99,11 +101,14 @@ function Settings() {
         <div className="h-12 w-12 rounded-2xl gradient-teal text-white grid place-items-center text-lg font-bold">
           {user.fullName.split(" ").map((s) => s[0]).slice(0, 2).join("")}
         </div>
-        <div className="flex-1">
-          <div className="font-bold">{user.fullName}</div>
-          <div className="text-[12px] text-muted-foreground">{user.email}</div>
+        <div className="flex-1 min-w-0">
+          <div className="font-bold truncate">{user.fullName}</div>
+          <div className="text-[12px] text-muted-foreground truncate">{user.email}</div>
           <div className="text-[11.5px] text-muted-foreground">{user.mobile}</div>
         </div>
+        <button onClick={() => setEditing(true)} className="h-9 px-3 rounded-full border border-border text-[12px] font-semibold inline-flex items-center gap-1.5 shrink-0">
+          <Pencil className="h-3.5 w-3.5" /> Edit
+        </button>
       </div>
 
       <SectionTitle icon={CreditCard}>Subscription</SectionTitle>
@@ -150,26 +155,86 @@ function Settings() {
 
       <SectionTitle>Account</SectionTitle>
       <div className="rounded-2xl bg-card border border-border divide-y divide-border overflow-hidden">
-        <Row icon={User} label="Profile" hint="Edit name, mobile, email" onClick={() => {}} />
+        <Row icon={User} label="Profile" hint="Edit name, mobile, email" onClick={() => setEditing(true)} />
         <Row icon={state.darkMode ? Sun : Moon} label={state.darkMode ? "Light mode" : "Dark mode"} hint="Switch app theme" onClick={toggleDark} />
-        <Row icon={Shield} label="Security" hint="Encryption · Sign-in protection" onClick={() => {}} />
+        <Row icon={Shield} label="Security" hint="Encryption · Sign-in protection" onClick={() => toast.info("Your records are encrypted in transit and at rest.")} />
       </div>
 
-      <SectionTitle>Legal</SectionTitle>
+      <SectionTitle>Legal & policies</SectionTitle>
       <div className="rounded-2xl bg-card border border-border divide-y divide-border overflow-hidden">
         <RowLink to="/legal/privacy" icon={Shield} label="Privacy Policy" />
-        <RowLink to="/legal/data" icon={FileText} label="Data & Storage Policy" />
+        <RowLink to="/legal/data" icon={Shield} label="Data Privacy & Storage Policy" />
+        <RowLink to="/legal/subscription" icon={CreditCard} label="Subscription Policy" />
+        <RowLink to="/legal/refund" icon={FileText} label="Refund Policy" />
+        <RowLink to="/legal/cancellation" icon={FileText} label="Cancellation Policy" />
         <RowLink to="/legal/terms" icon={FileText} label="Terms & Conditions" />
       </div>
+
+      {editing && (
+        <ProfileSheet
+          user={{ fullName: user.fullName, email: user.email, mobile: user.mobile, location: user.location ?? "" }}
+          onClose={() => setEditing(false)}
+          onSave={(data) => { updateProfile(data); setEditing(false); toast.success("Profile updated"); }}
+        />
+      )}
+
 
       <button onClick={() => { logout(); navigate({ to: "/auth" }); }} className="mt-4 w-full h-11 rounded-2xl bg-destructive/10 text-destructive font-semibold inline-flex items-center justify-center gap-2">
         <LogOut className="h-4 w-4" /> Sign out
       </button>
 
-      <p className="text-center text-[11px] text-muted-foreground mt-4">PetCareBuddy v1.0 · Made with care</p>
+      <p className="text-center text-[11px] text-muted-foreground mt-4">PetCare Family v1.0 · Made with care</p>
     </AppShell>
   );
 }
+
+type ProfileData = { fullName: string; email: string; mobile: string; location: string };
+
+function ProfileSheet({ user, onClose, onSave }: { user: ProfileData; onClose: () => void; onSave: (data: ProfileData) => void }) {
+  const [form, setForm] = useState<ProfileData>(user);
+  const set = (k: keyof ProfileData) => (e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  return (
+    <div className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (form.fullName.trim().length < 2) return toast.error("Enter your name");
+          if (!/^\S+@\S+\.\S+$/.test(form.email.trim())) return toast.error("Enter a valid email");
+          if (form.mobile.replace(/\D/g, "").length < 8) return toast.error("Enter a valid mobile number");
+          onSave({
+            fullName: form.fullName.trim(),
+            email: form.email.trim(),
+            mobile: form.mobile.trim(),
+            location: form.location.trim(),
+          });
+        }}
+        className="w-full sm:max-w-md bg-card rounded-t-3xl sm:rounded-3xl border border-border p-5 space-y-3 animate-in slide-in-from-bottom"
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="font-extrabold text-base">Edit profile</h2>
+          <button type="button" onClick={onClose} className="h-9 w-9 grid place-items-center rounded-full hover:bg-muted"><X className="h-4 w-4" /></button>
+        </div>
+        <Field label="Full name"><input value={form.fullName} onChange={set("fullName")} maxLength={60} className="input-line" /></Field>
+        <Field label="Email"><input type="email" value={form.email} onChange={set("email")} maxLength={120} className="input-line" /></Field>
+        <Field label="Mobile"><input value={form.mobile} onChange={set("mobile")} maxLength={20} className="input-line" /></Field>
+        <Field label="City / area"><input value={form.location} onChange={set("location")} maxLength={80} placeholder="Used to pre-fill vet search" className="input-line" /></Field>
+        <button type="submit" className="w-full h-11 rounded-2xl gradient-teal text-white font-semibold text-sm">Save changes</button>
+      </form>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="text-[11.5px] font-semibold text-muted-foreground">{label}</span>
+      <div className="mt-1 h-11 rounded-2xl border border-border bg-background px-3 flex items-center">{children}</div>
+    </label>
+  );
+}
+
+
 
 function Row({ icon: Icon, label, hint, onClick }: { icon: React.ComponentType<{ className?: string }>; label: string; hint?: string; onClick: () => void }) {
   return (

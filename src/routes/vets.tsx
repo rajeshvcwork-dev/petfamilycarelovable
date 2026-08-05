@@ -11,9 +11,9 @@ import { searchProviders, type ProviderResult } from "@/lib/places.functions";
 export const Route = createFileRoute("/vets")({
   head: () => ({
     meta: [
-      { title: "Find a vet near you — PetCareBuddy" },
-      { name: "description", content: "Search live for veterinary hospitals, clinics and specialists near you and view results right inside PetCareBuddy." },
-      { property: "og:title", content: "Find a vet near you — PetCareBuddy" },
+      { title: "Find a vet near you — PetCare Family" },
+      { name: "description", content: "Search live for veterinary hospitals, clinics and specialists near you and view results right inside PetCare Family." },
+      { property: "og:title", content: "Find a vet near you — PetCare Family" },
       { property: "og:description", content: "Search live for veterinary hospitals, clinics and specialists near you." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -36,7 +36,6 @@ function VetsPage() {
   const [active, setActive] = useState<Vet | null>(null);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
-  const [configured, setConfigured] = useState(true);
   const [results, setResults] = useState<ProviderResult[]>([]);
 
   useEffect(() => { if (!state.currentUserId) navigate({ to: "/auth" }); }, [state.currentUserId, navigate]);
@@ -46,6 +45,8 @@ function VetsPage() {
     [state.vets, kind],
   );
 
+  const googleQuery = [q.trim(), near.trim()].filter(Boolean).join(" ");
+
   async function submit(term?: string) {
     const query = (term ?? q).trim();
     if (query.length < 2) return toast.error("Type what you're looking for");
@@ -53,11 +54,10 @@ function VetsPage() {
     setLoading(true);
     try {
       const res = await runSearch({ data: { query, near: near.trim() || undefined } });
-      setConfigured(res.configured);
       setResults(res.results);
       setSearched(true);
       if (res.error) toast.error(res.error);
-      else if (res.configured && res.results.length === 0) toast.info("No providers found — try a different area");
+      else if (res.results.length === 0) toast.info("No providers found — try a different area");
     } catch {
       toast.error("Search failed. Please try again.");
     } finally {
@@ -84,6 +84,16 @@ function VetsPage() {
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />} Search
           </button>
         </div>
+        {googleQuery.length > 1 && (
+          <a
+            target="_blank"
+            rel="noreferrer"
+            href={`https://www.google.com/search?q=${encodeURIComponent(googleQuery)}`}
+            className="w-full h-10 rounded-2xl border border-border bg-card text-[12.5px] font-semibold inline-flex items-center justify-center gap-2"
+          >
+            <Globe className="h-3.5 w-3.5" /> Search “{googleQuery}” on Google
+          </a>
+        )}
       </form>
 
       <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-2">
@@ -92,15 +102,9 @@ function VetsPage() {
         ))}
       </div>
 
-      {!configured && (
-        <div className="rounded-2xl border border-dashed border-border p-4 text-[12.5px] text-muted-foreground">
-          Live search isn’t connected yet. Add a Google search key in the admin setup to show real hospitals, doctors and clinics here.
-        </div>
-      )}
-
-      {searched && configured && (
+      {searched && (
         <>
-          <SectionTitle icon={Globe}>{results.length} live result{results.length === 1 ? "" : "s"}</SectionTitle>
+          <SectionTitle icon={Globe}>{results.length} result{results.length === 1 ? "" : "s"}</SectionTitle>
           <div className="space-y-2">
             {results.map((r) => (
               <div key={r.id} className="rounded-2xl bg-card border border-border p-3">
@@ -109,23 +113,12 @@ function VetsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 justify-between">
                       <div className="font-semibold text-[14px] truncate">{r.name}</div>
-                      {r.rating != null && (
-                        <span className="pill bg-warning/15 text-warning-foreground shrink-0"><Star className="h-3 w-3 fill-current" />{r.rating}</span>
-                      )}
-                    </div>
-                    <div className="text-[11.5px] text-muted-foreground">
-                      {r.reviewsCount != null ? `${r.reviewsCount} Google reviews` : "Google listing"}
-                      {r.openNow != null ? (r.openNow ? " · Open now" : " · Closed") : ""}
+                      <span className="pill bg-muted text-muted-foreground shrink-0 capitalize">{r.category}</span>
                     </div>
                     <div className="text-[11.5px] text-muted-foreground flex items-start gap-1 mt-1"><MapPin className="h-3 w-3 mt-0.5 shrink-0" />{r.address}</div>
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {r.phone && (
-                        <a href={`tel:${r.phone.replace(/[^\d+]/g, "")}`} className="pill bg-primary/10 text-primary"><Phone className="h-3 w-3" />Call</a>
-                      )}
+                      <a target="_blank" rel="noreferrer" href={r.searchUrl} className="pill bg-primary/10 text-primary"><Globe className="h-3 w-3" />Google details</a>
                       <a target="_blank" rel="noreferrer" href={r.mapsUrl} className="pill bg-muted text-muted-foreground"><MapPin className="h-3 w-3" />Directions</a>
-                      {r.website && (
-                        <a target="_blank" rel="noreferrer" href={r.website} className="pill bg-muted text-muted-foreground"><ExternalLink className="h-3 w-3" />Website</a>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -137,6 +130,8 @@ function VetsPage() {
           </div>
         </>
       )}
+
+
 
       <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 mt-4">
         {["All", "Hospital", "Clinic", "Veterinarian", "Specialist"].map((k) => (

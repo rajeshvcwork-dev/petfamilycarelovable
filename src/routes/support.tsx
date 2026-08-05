@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Send, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/support")({
-  head: () => ({ meta: [{ title: "Support — PetCareBuddy" }] }),
+  head: () => ({ meta: [{ title: "Support — PetCare Family" }] }),
   component: SupportPage,
 });
 
@@ -33,7 +33,7 @@ function aiReply(q: string): string {
 
 function SupportPage() {
   const [messages, setMessages] = useState<Msg[]>([
-    { id: "m1", from: "ai", text: "Hi! I'm the PetCareBuddy assistant. Ask me anything about your pets, records or your account." },
+    { id: "m1", from: "ai", text: "Hi! I'm the PetCare Family assistant. Ask me anything about your pets, records or your account." },
   ]);
   const [input, setInput] = useState("");
 

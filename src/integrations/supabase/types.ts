@@ -73,6 +73,7 @@ export type Database = {
           plan_code: string
           started_at: string
           status: string
+          trial_ends_at: string | null
           updated_at: string
         }
         Insert: {
@@ -85,6 +86,7 @@ export type Database = {
           plan_code?: string
           started_at?: string
           status?: string
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -97,6 +99,7 @@ export type Database = {
           plan_code?: string
           started_at?: string
           status?: string
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -113,6 +116,7 @@ export type Database = {
           name: string
           period_days: number
           pet_limit: number
+          trial_days: number
           updated_at: string
         }
         Insert: {
@@ -126,6 +130,7 @@ export type Database = {
           name: string
           period_days?: number
           pet_limit?: number
+          trial_days?: number
           updated_at?: string
         }
         Update: {
@@ -139,6 +144,7 @@ export type Database = {
           name?: string
           period_days?: number
           pet_limit?: number
+          trial_days?: number
           updated_at?: string
         }
         Relationships: []

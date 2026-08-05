@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { PawPrint, Mail, Lock, User, Phone, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "Sign in — PetCareBuddy" }] }),
+  head: () => ({ meta: [{ title: "Sign in — PetCare Family" }] }),
   component: AuthPage,
 });
 
@@ -30,12 +30,11 @@ function AuthPage() {
       const ok = login(email, password);
       if (!ok) return toast.error("Invalid credentials. Try demouser / demouser");
       toast.success("Welcome back");
-      const isAdmin = email.trim().toLowerCase() === "admin";
-      navigate({ to: isAdmin ? "/admin" : "/dashboard" });
+      navigate({ to: "/dashboard" });
     } else if (mode === "register") {
       if (!fullName || !email || !mobile || !password) return toast.error("Fill all fields");
       register({ fullName, email, mobile, password });
-      toast.success("Account created — welcome to PetCareBuddy");
+      toast.success("Account created — welcome to PetCare Family");
       navigate({ to: "/dashboard" });
     } else {
       toast.success("Reset link sent (demo) — check your email");
@@ -50,7 +49,7 @@ function AuthPage() {
           <div className="mx-auto h-14 w-14 rounded-3xl gradient-teal grid place-items-center text-white shadow-pop">
             <PawPrint className="h-7 w-7" />
           </div>
-          <h1 className="mt-4 text-2xl font-extrabold tracking-tight">PetCareBuddy</h1>
+          <h1 className="mt-4 text-2xl font-extrabold tracking-tight">PetCare Family</h1>
           <p className="text-[13px] text-muted-foreground">Your Intelligent Pet Healthcare Companion</p>
         </div>
 
@@ -111,9 +110,9 @@ function AuthPage() {
               <Sparkles className="h-3.5 w-3.5" /> Demo account
             </div>
             <div className="mt-1 text-muted-foreground">
-              Username <span className="font-mono font-semibold text-foreground">demouser</span> · Password <span className="font-mono font-semibold text-foreground">demouser</span><br />
-              Admin: <span className="font-mono font-semibold text-foreground">admin</span> / <span className="font-mono font-semibold text-foreground">admin</span>
+              Username <span className="font-mono font-semibold text-foreground">demouser</span> · Password <span className="font-mono font-semibold text-foreground">demouser</span>
             </div>
+
           </div>
         </div>
 

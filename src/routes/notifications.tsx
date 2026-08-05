@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/notifications")({
-  head: () => ({ meta: [{ title: "Notifications — PetCareBuddy" }] }),
+  head: () => ({ meta: [{ title: "Notifications — PetCare Family" }] }),
   component: NotifPage,
 });
 

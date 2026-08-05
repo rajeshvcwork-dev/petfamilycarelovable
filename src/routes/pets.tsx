@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import type { Pet } from "@/lib/seed";
 
 export const Route = createFileRoute("/pets")({
-  head: () => ({ meta: [{ title: "My Pets — PetCareBuddy" }] }),
+  head: () => ({ meta: [{ title: "My Pets — PetCare Family" }] }),
   component: PetsPage,
 });
 
