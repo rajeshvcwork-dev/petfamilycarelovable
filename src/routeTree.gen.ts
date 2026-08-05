@@ -21,6 +21,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PetsPetIdRouteImport } from './routes/pets.$petId'
 import { Route as LegalTermsRouteImport } from './routes/legal.terms'
+import { Route as LegalSubscriptionRouteImport } from './routes/legal.subscription'
 import { Route as LegalRefundRouteImport } from './routes/legal.refund'
 import { Route as LegalPrivacyRouteImport } from './routes/legal.privacy'
 import { Route as LegalDataRouteImport } from './routes/legal.data'
@@ -85,6 +86,11 @@ const LegalTermsRoute = LegalTermsRouteImport.update({
   path: '/legal/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LegalSubscriptionRoute = LegalSubscriptionRouteImport.update({
+  id: '/legal/subscription',
+  path: '/legal/subscription',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LegalRefundRoute = LegalRefundRouteImport.update({
   id: '/legal/refund',
   path: '/legal/refund',
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/legal/data': typeof LegalDataRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/refund': typeof LegalRefundRoute
+  '/legal/subscription': typeof LegalSubscriptionRoute
   '/legal/terms': typeof LegalTermsRoute
   '/pets/$petId': typeof PetsPetIdRoute
 }
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/legal/data': typeof LegalDataRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/refund': typeof LegalRefundRoute
+  '/legal/subscription': typeof LegalSubscriptionRoute
   '/legal/terms': typeof LegalTermsRoute
   '/pets/$petId': typeof PetsPetIdRoute
 }
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/legal/data': typeof LegalDataRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/refund': typeof LegalRefundRoute
+  '/legal/subscription': typeof LegalSubscriptionRoute
   '/legal/terms': typeof LegalTermsRoute
   '/pets/$petId': typeof PetsPetIdRoute
 }
@@ -169,6 +178,7 @@ export interface FileRouteTypes {
     | '/legal/data'
     | '/legal/privacy'
     | '/legal/refund'
+    | '/legal/subscription'
     | '/legal/terms'
     | '/pets/$petId'
   fileRoutesByTo: FileRoutesByTo
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
     | '/legal/data'
     | '/legal/privacy'
     | '/legal/refund'
+    | '/legal/subscription'
     | '/legal/terms'
     | '/pets/$petId'
   id:
@@ -203,6 +214,7 @@ export interface FileRouteTypes {
     | '/legal/data'
     | '/legal/privacy'
     | '/legal/refund'
+    | '/legal/subscription'
     | '/legal/terms'
     | '/pets/$petId'
   fileRoutesById: FileRoutesById
@@ -221,6 +233,7 @@ export interface RootRouteChildren {
   LegalDataRoute: typeof LegalDataRoute
   LegalPrivacyRoute: typeof LegalPrivacyRoute
   LegalRefundRoute: typeof LegalRefundRoute
+  LegalSubscriptionRoute: typeof LegalSubscriptionRoute
   LegalTermsRoute: typeof LegalTermsRoute
 }
 
@@ -310,6 +323,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LegalTermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/legal/subscription': {
+      id: '/legal/subscription'
+      path: '/legal/subscription'
+      fullPath: '/legal/subscription'
+      preLoaderRoute: typeof LegalSubscriptionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/legal/refund': {
       id: '/legal/refund'
       path: '/legal/refund'
@@ -358,6 +378,7 @@ const rootRouteChildren: RootRouteChildren = {
   LegalDataRoute: LegalDataRoute,
   LegalPrivacyRoute: LegalPrivacyRoute,
   LegalRefundRoute: LegalRefundRoute,
+  LegalSubscriptionRoute: LegalSubscriptionRoute,
   LegalTermsRoute: LegalTermsRoute,
 }
 export const routeTree = rootRouteImport
