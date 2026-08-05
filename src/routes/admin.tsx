@@ -8,7 +8,8 @@ import {
   MessageSquare, PawPrint, Plus, Users, XCircle,
 } from "lucide-react";
 import {
-  adminExtendSubscription, adminGetBilling, adminSavePlan, adminSetSubscriberStatus,
+  adminExtendSubscription, adminGetBilling, adminGrantTrial, adminSavePlan,
+  adminSetSubscriberPlan, adminSetSubscriberStatus,
   type AdminAttempt, type AdminPlan, type AdminSubscriber,
 } from "@/lib/billing-admin.functions";
 
@@ -30,7 +31,7 @@ type Billing = {
   plans: AdminPlan[];
   subscribers: AdminSubscriber[];
   attempts: AdminAttempt[];
-  gateway: { keyIdConfigured: boolean; keySecretConfigured: boolean; searchConfigured: boolean };
+  gateway: { keyIdConfigured: boolean; keySecretConfigured: boolean; passcodeConfigured: boolean };
 };
 
 function Admin() {
@@ -41,19 +42,20 @@ function Admin() {
   const savePlan = useServerFn(adminSavePlan);
   const setStatus = useServerFn(adminSetSubscriberStatus);
   const extend = useServerFn(adminExtendSubscription);
+  const grantTrial = useServerFn(adminGrantTrial);
+  const changePlan = useServerFn(adminSetSubscriberPlan);
 
+  const [username, setUsername] = useState("");
   const [passcode, setPasscode] = useState("");
   const [unlocked, setUnlocked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [billing, setBilling] = useState<Billing | null>(null);
 
-  useEffect(() => {
-    if (state.currentUserId !== "u_admin") navigate({ to: "/auth" });
-  }, [state.currentUserId, navigate]);
-
-  if (state.currentUserId !== "u_admin") return null;
-
   async function refresh(code = passcode) {
+    if (username.trim().toLowerCase() !== "administrator") {
+      toast.error("Incorrect administrator username.");
+      return;
+    }
     setLoading(true);
     try {
       const data = await getBilling({ data: { passcode: code } });
@@ -75,8 +77,11 @@ function Admin() {
     { label: "Reviews", value: state.reviews.length, icon: MessageSquare },
   ];
 
-  const active = billing?.subscribers.filter((s) => s.status === "active") ?? [];
-  const inactive = billing?.subscribers.filter((s) => s.status !== "active") ?? [];
+  const active = billing?.subscribers.filter((s) => s.status === "active" || s.status === "trialing") ?? [];
+  const inactive = billing?.subscribers.filter((s) => s.status !== "active" && s.status !== "trialing") ?? [];
+  const newCustomers = (billing?.subscribers ?? []).filter(
+    (s) => Date.now() - Date.parse(s.startedAt) < 30 * 86400000,
+  );
   const failed = billing?.attempts.filter((a) => a.status !== "paid") ?? [];
 
   return (
@@ -107,18 +112,27 @@ function Admin() {
           >
             <div className="text-[12.5px] text-muted-foreground flex items-start gap-2">
               <KeyRound className="h-4 w-4 mt-0.5 text-primary shrink-0" />
-              Enter the admin passcode to open subscription management, customer records and payment attempts.
+              Sign in as administrator to open subscription management, customer records, trials and payment attempts.
             </div>
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              maxLength={60}
+              autoComplete="username"
+              placeholder="Administrator username"
+              className="w-full h-11 rounded-2xl border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            />
             <input
               type="password"
               value={passcode}
               onChange={(e) => setPasscode(e.target.value)}
               maxLength={200}
-              placeholder="Admin passcode"
+              placeholder="Administrator password"
+              autoComplete="current-password"
               className="w-full h-11 rounded-2xl border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary/40"
             />
-            <button disabled={loading || !passcode} className="w-full h-11 rounded-2xl gradient-teal text-white text-[13px] font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-60">
-              {loading && <Loader2 className="h-4 w-4 animate-spin" />} Unlock
+            <button disabled={loading || !passcode || !username} className="w-full h-11 rounded-2xl gradient-teal text-white text-[13px] font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-60">
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />} Sign in
             </button>
           </form>
         ) : billing ? (
@@ -128,7 +142,7 @@ function Admin() {
               <div className="grid gap-1.5 text-[12px]">
                 <GatewayRow label="Razorpay Key ID" ok={billing.gateway.keyIdConfigured} />
                 <GatewayRow label="Razorpay Key Secret" ok={billing.gateway.keySecretConfigured} />
-                <GatewayRow label="Google provider search key" ok={billing.gateway.searchConfigured} />
+                <GatewayRow label="Admin passcode" ok={billing.gateway.passcodeConfigured} />
               </div>
               <p className="text-[11px] text-muted-foreground mt-2">Keys are stored securely on the server and never shown in the app.</p>
             </div>
@@ -152,6 +166,21 @@ function Admin() {
               ))}
             </div>
 
+            {newCustomers.length > 0 && (
+              <div>
+                <div className="text-[12px] font-semibold mb-2">New customers · last 30 days ({newCustomers.length})</div>
+                <div className="rounded-2xl bg-card border border-border overflow-hidden">
+                  {newCustomers.map((s, i) => (
+                    <div key={s.id} className={`px-4 py-3 ${i ? "border-t border-border" : ""}`}>
+                      <div className="text-[13px] font-semibold truncate">{s.fullName || s.email}</div>
+                      <div className="text-[11.5px] text-muted-foreground truncate">{s.email}{s.mobile ? ` · ${s.mobile}` : ""}</div>
+                      <div className="text-[11px] text-muted-foreground mt-0.5">{s.planCode} · joined {new Date(s.startedAt).toLocaleDateString()} · {s.status}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <SubscriberList
               title={`Active customers (${active.length})`}
               rows={active}
@@ -166,6 +195,20 @@ function Admin() {
                 try {
                   await extend({ data: { passcode, id, days } });
                   toast.success(`Extended by ${days} days`);
+                  await refresh();
+                } catch (err) { toast.error(err instanceof Error ? err.message : "Failed"); }
+              }}
+              onTrial={async (id, days) => {
+                try {
+                  await grantTrial({ data: { passcode, id, days } });
+                  toast.success(`${days}-day free trial started`);
+                  await refresh();
+                } catch (err) { toast.error(err instanceof Error ? err.message : "Failed"); }
+              }}
+              onPlan={async (id, planCode) => {
+                try {
+                  await changePlan({ data: { passcode, id, planCode } });
+                  toast.success(`Moved to ${planCode} plan`);
                   await refresh();
                 } catch (err) { toast.error(err instanceof Error ? err.message : "Failed"); }
               }}
@@ -185,6 +228,20 @@ function Admin() {
                 try {
                   await extend({ data: { passcode, id, days } });
                   toast.success(`Extended by ${days} days`);
+                  await refresh();
+                } catch (err) { toast.error(err instanceof Error ? err.message : "Failed"); }
+              }}
+              onTrial={async (id, days) => {
+                try {
+                  await grantTrial({ data: { passcode, id, days } });
+                  toast.success(`${days}-day free trial started`);
+                  await refresh();
+                } catch (err) { toast.error(err instanceof Error ? err.message : "Failed"); }
+              }}
+              onPlan={async (id, planCode) => {
+                try {
+                  await changePlan({ data: { passcode, id, planCode } });
+                  toast.success(`Moved to ${planCode} plan`);
                   await refresh();
                 } catch (err) { toast.error(err instanceof Error ? err.message : "Failed"); }
               }}
@@ -250,11 +307,12 @@ function GatewayRow({ label, ok }: { label: string; ok: boolean }) {
   );
 }
 
-function PlanEditor({ plan, onSave }: { plan: AdminPlan; onSave: (patch: { name: string; description?: string; amountPaise: number; periodDays: number; petLimit: number; isActive: boolean }) => Promise<void> }) {
+function PlanEditor({ plan, onSave }: { plan: AdminPlan; onSave: (patch: { name: string; description?: string; amountPaise: number; periodDays: number; petLimit: number; trialDays: number; isActive: boolean }) => Promise<void> }) {
   const [name, setName] = useState(plan.name);
   const [rupees, setRupees] = useState(String(plan.amountPaise / 100));
   const [periodDays, setPeriodDays] = useState(String(plan.periodDays));
   const [petLimit, setPetLimit] = useState(String(plan.petLimit));
+  const [trialDays, setTrialDays] = useState(String(plan.trialDays));
   const [isActive, setIsActive] = useState(plan.isActive);
   const [saving, setSaving] = useState(false);
 
@@ -272,17 +330,19 @@ function PlanEditor({ plan, onSave }: { plan: AdminPlan; onSave: (patch: { name:
         <Field label="Days" value={periodDays} onChange={setPeriodDays} type="number" />
         <Field label="Pet limit" value={petLimit} onChange={setPetLimit} type="number" />
       </div>
+      <Field label="Free trial (days)" value={trialDays} onChange={setTrialDays} type="number" />
       <button
         disabled={saving}
         onClick={async () => {
           const amount = Math.round(Number(rupees) * 100);
           const days = Number(periodDays);
           const pets = Number(petLimit);
-          if (!name.trim() || !Number.isFinite(amount) || amount < 0 || days < 1 || pets < 1) {
+          const trial = Number(trialDays);
+          if (!name.trim() || !Number.isFinite(amount) || amount < 0 || days < 1 || pets < 1 || !Number.isFinite(trial) || trial < 0) {
             return toast.error("Check the plan values");
           }
           setSaving(true);
-          await onSave({ name: name.trim(), amountPaise: amount, periodDays: days, petLimit: pets, isActive });
+          await onSave({ name: name.trim(), amountPaise: amount, periodDays: days, petLimit: pets, trialDays: trial, isActive });
           setSaving(false);
         }}
         className="w-full h-10 rounded-2xl gradient-teal text-white text-[13px] font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-60"
@@ -302,12 +362,14 @@ function Field({ label, value, onChange, type = "text" }: { label: string; value
   );
 }
 
-function SubscriberList({ title, rows, onActivate, onDeactivate, onExtend }: {
+function SubscriberList({ title, rows, onActivate, onDeactivate, onExtend, onTrial, onPlan }: {
   title: string;
   rows: AdminSubscriber[];
   onActivate?: (id: string) => Promise<void>;
   onDeactivate?: (id: string) => Promise<void>;
   onExtend: (id: string, days: number) => Promise<void>;
+  onTrial: (id: string, days: number) => Promise<void>;
+  onPlan: (id: string, planCode: "single" | "family") => Promise<void>;
 }) {
   return (
     <div>
@@ -324,6 +386,7 @@ function SubscriberList({ title, rows, onActivate, onDeactivate, onExtend }: {
             </div>
             <div className="text-[11px] text-muted-foreground mt-1">
               {s.planCode} · expires {new Date(s.expiresAt).toLocaleDateString()}
+              {s.trialEndsAt ? ` · trial ends ${new Date(s.trialEndsAt).toLocaleDateString()}` : ""}
             </div>
             <div className="flex flex-wrap gap-2 mt-2">
               {[30, 90, 365].map((d) => (
@@ -337,6 +400,14 @@ function SubscriberList({ title, rows, onActivate, onDeactivate, onExtend }: {
               {onActivate && (
                 <button onClick={() => void onActivate(s.id)} className="pill bg-success/15 text-success">Activate</button>
               )}
+              <button onClick={() => void onPlan(s.id, s.planCode === "family" ? "single" : "family")} className="pill bg-info/10 text-info">
+                Switch to {s.planCode === "family" ? "single" : "family"}
+              </button>
+              {[7, 14, 30].map((d) => (
+                <button key={`t${d}`} onClick={() => void onTrial(s.id, d)} className="pill bg-warning/15 text-warning-foreground">
+                  {d}d trial
+                </button>
+              ))}
             </div>
           </div>
         ))}
