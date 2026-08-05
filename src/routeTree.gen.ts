@@ -25,6 +25,7 @@ import { Route as LegalSubscriptionRouteImport } from './routes/legal.subscripti
 import { Route as LegalRefundRouteImport } from './routes/legal.refund'
 import { Route as LegalPrivacyRouteImport } from './routes/legal.privacy'
 import { Route as LegalDataRouteImport } from './routes/legal.data'
+import { Route as LegalCancellationRouteImport } from './routes/legal.cancellation'
 
 const VetsRoute = VetsRouteImport.update({
   id: '/vets',
@@ -106,6 +107,11 @@ const LegalDataRoute = LegalDataRouteImport.update({
   path: '/legal/data',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LegalCancellationRoute = LegalCancellationRouteImport.update({
+  id: '/legal/cancellation',
+  path: '/legal/cancellation',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -118,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/support': typeof SupportRoute
   '/vets': typeof VetsRoute
+  '/legal/cancellation': typeof LegalCancellationRoute
   '/legal/data': typeof LegalDataRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/refund': typeof LegalRefundRoute
@@ -136,6 +143,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/support': typeof SupportRoute
   '/vets': typeof VetsRoute
+  '/legal/cancellation': typeof LegalCancellationRoute
   '/legal/data': typeof LegalDataRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/refund': typeof LegalRefundRoute
@@ -155,6 +163,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/support': typeof SupportRoute
   '/vets': typeof VetsRoute
+  '/legal/cancellation': typeof LegalCancellationRoute
   '/legal/data': typeof LegalDataRoute
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/refund': typeof LegalRefundRoute
@@ -175,6 +184,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/support'
     | '/vets'
+    | '/legal/cancellation'
     | '/legal/data'
     | '/legal/privacy'
     | '/legal/refund'
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/support'
     | '/vets'
+    | '/legal/cancellation'
     | '/legal/data'
     | '/legal/privacy'
     | '/legal/refund'
@@ -211,6 +222,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/support'
     | '/vets'
+    | '/legal/cancellation'
     | '/legal/data'
     | '/legal/privacy'
     | '/legal/refund'
@@ -230,6 +242,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   SupportRoute: typeof SupportRoute
   VetsRoute: typeof VetsRoute
+  LegalCancellationRoute: typeof LegalCancellationRoute
   LegalDataRoute: typeof LegalDataRoute
   LegalPrivacyRoute: typeof LegalPrivacyRoute
   LegalRefundRoute: typeof LegalRefundRoute
@@ -351,6 +364,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LegalDataRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/legal/cancellation': {
+      id: '/legal/cancellation'
+      path: '/legal/cancellation'
+      fullPath: '/legal/cancellation'
+      preLoaderRoute: typeof LegalCancellationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -375,6 +395,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   SupportRoute: SupportRoute,
   VetsRoute: VetsRoute,
+  LegalCancellationRoute: LegalCancellationRoute,
   LegalDataRoute: LegalDataRoute,
   LegalPrivacyRoute: LegalPrivacyRoute,
   LegalRefundRoute: LegalRefundRoute,
