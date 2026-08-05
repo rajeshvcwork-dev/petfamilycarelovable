@@ -39,6 +39,8 @@ function Settings() {
   const confirmPayment = useServerFn(confirmSubscriptionPayment);
   const failAttempt = useServerFn(failSubscriptionAttempt);
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(false);
+
 
   const { data: config } = useQuery({ queryKey: ["checkout-config"], queryFn: () => fetchConfig() });
   const familyPlan = config?.plans.find((p) => p.code === "family");
