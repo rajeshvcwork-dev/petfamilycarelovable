@@ -1,10 +1,10 @@
-# Pet Health Companion
+# PetFamilyCare Health Companion
 
-CAREBUDDY – PREMIUM AI-POWERED PREVENTIVE PET HEALTHCARE MOBILE APPLICATION
+PREMIUM AI-POWERED PREVENTIVE PET HEALTHCARE MOBILE APPLICATION
 
 Build a premium, polished, enterprise-grade mobile application called:
 
-PetCareBuddy
+PetFamilyCare
 
 Tagline:
 "Your Intelligent Pet Healthcare Companion"
