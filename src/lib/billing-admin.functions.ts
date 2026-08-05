@@ -9,6 +9,7 @@ export type AdminPlan = {
   currency: string;
   periodDays: number;
   petLimit: number;
+  trialDays: number;
   isActive: boolean;
 };
 
@@ -21,6 +22,7 @@ export type AdminSubscriber = {
   status: string;
   startedAt: string;
   expiresAt: string;
+  trialEndsAt: string | null;
 };
 
 export type AdminAttempt = {
@@ -64,6 +66,7 @@ export const adminGetBilling = createServerFn({ method: "POST" })
       currency: p.currency,
       periodDays: p.period_days,
       petLimit: p.pet_limit,
+      trialDays: p.trial_days,
       isActive: p.is_active,
     }));
 
@@ -76,6 +79,7 @@ export const adminGetBilling = createServerFn({ method: "POST" })
       status: s.status,
       startedAt: s.started_at,
       expiresAt: s.expires_at,
+      trialEndsAt: s.trial_ends_at,
     }));
 
     const attempts: AdminAttempt[] = (attemptsRes.data ?? []).map((a) => ({
@@ -94,7 +98,7 @@ export const adminGetBilling = createServerFn({ method: "POST" })
     const gateway = {
       keyIdConfigured: Boolean(process.env["RAZORPAY_KEY_ID"]),
       keySecretConfigured: Boolean(process.env["RAZORPAY_KEY_SECRET"]),
-      searchConfigured: Boolean(process.env["GOOGLE_MAPS_API_KEY"]),
+      passcodeConfigured: Boolean(process.env["ADMIN_PASSCODE"]),
     };
 
     return { plans, subscribers, attempts, gateway };
@@ -107,6 +111,7 @@ const planSchema = pass.extend({
   amountPaise: z.number().int().min(0).max(100000000),
   periodDays: z.number().int().min(1).max(3650),
   petLimit: z.number().int().min(1).max(50),
+  trialDays: z.number().int().min(0).max(365),
   isActive: z.boolean(),
 });
 
@@ -123,6 +128,7 @@ export const adminSavePlan = createServerFn({ method: "POST" })
         amount_paise: data.amountPaise,
         period_days: data.periodDays,
         pet_limit: data.petLimit,
+        trial_days: data.trialDays,
         is_active: data.isActive,
       })
       .eq("code", data.code);
@@ -132,7 +138,7 @@ export const adminSavePlan = createServerFn({ method: "POST" })
 
 const statusSchema = pass.extend({
   id: z.string().uuid(),
-  status: z.enum(["active", "inactive"]),
+  status: z.enum(["active", "inactive", "trialing"]),
 });
 
 export const adminSetSubscriberStatus = createServerFn({ method: "POST" })
@@ -169,4 +175,41 @@ export const adminExtendSubscription = createServerFn({ method: "POST" })
       .eq("id", data.id);
     if (error) throw new Error("Could not extend the subscription.");
     return { expiresAt: next };
+  });
+
+const planChangeSchema = pass.extend({
+  id: z.string().uuid(),
+  planCode: z.enum(["single", "family"]),
+});
+
+export const adminSetSubscriberPlan = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => planChangeSchema.parse(data))
+  .handler(async ({ data }) => {
+    assertPasscode(data.passcode);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("subscribers")
+      .update({ plan_code: data.planCode })
+      .eq("id", data.id);
+    if (error) throw new Error("Could not change the plan.");
+    return { ok: true };
+  });
+
+const trialSchema = pass.extend({
+  id: z.string().uuid(),
+  days: z.number().int().min(1).max(365),
+});
+
+export const adminGrantTrial = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => trialSchema.parse(data))
+  .handler(async ({ data }) => {
+    assertPasscode(data.passcode);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const trialEnds = new Date(Date.now() + data.days * 86400000).toISOString();
+    const { error } = await supabaseAdmin
+      .from("subscribers")
+      .update({ status: "trialing", trial_ends_at: trialEnds, expires_at: trialEnds })
+      .eq("id", data.id);
+    if (error) throw new Error("Could not start the free trial.");
+    return { trialEndsAt: trialEnds };
   });
